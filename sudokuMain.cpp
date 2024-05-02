@@ -1,29 +1,23 @@
-#include "sudokuClass.h"
 #include "sudokuClass.cpp"
 #include <iostream>
+#include <chrono>
 
 int main() {
-    vector<vector<int>> initialBoard = {
-        {5, 3, 0, 0, 7, 0, 0, 0, 0},
-        {6, 0, 0, 1, 9, 5, 0, 0, 0},
-        {0, 9, 8, 0, 0, 0, 0, 6, 0},
-        {8, 0, 0, 0, 6, 0, 0, 0, 3},
-        {4, 0, 0, 8, 0, 3, 0, 0, 1},
-        {7, 0, 0, 0, 2, 0, 0, 0, 6},
-        {0, 6, 0, 0, 0, 0, 2, 8, 0},
-        {0, 0, 0, 4, 1, 9, 0, 0, 5},
-        {0, 0, 0, 0, 8, 0, 0, 7, 9}
-    };
+    SudokuBoard sudoku;
 
-    SudokuBoard board(initialBoard);
+    sudoku.readBoardFromFile("initialBoard.txt");
 
-    cout << "Initial Board:" << endl;
-    board.printBoard();
+    auto start = chrono::high_resolution_clock::now();
+    if (sudoku.solve()) {
+        auto end = chrono::high_resolution_clock::now();
+        chrono::duration<double> runtime = end - start;
+        sudoku.setRuntime(runtime.count());
 
-    if(board.solve()) {
-        cout << "\nSolved Board:" << endl;
-        board.printBoard();
+        sudoku.printBoardToFile("solvedBoard.txt");
+        cout << "Sudoku puzzle solved successfully.\n";
     } else {
-        cout << "\nBoard has no solutions." << endl;
+        cout << "No solution exists for the given Sudoku puzzle.\n";
     }
+
+    return 0;
 }

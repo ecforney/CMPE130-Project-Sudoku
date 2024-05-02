@@ -1,68 +1,105 @@
-#include "sudokuClass.h"
 #include <iostream>
+#include <fstream>
+#include <vector>
+#include "sudokuClass.h"
+
 using namespace std;
 
-SudokuBoard::SudokuBoard(const vector<vector<int>>& initialBoard) {
-    board = initialBoard;
+const int N = 9;
+
+// Constructor
+SudokuBoard::SudokuBoard() {
+    board.resize(N, vector<int>(N, 0));
 }
 
-bool SudokuBoard::solve() {
-    int row, col;
-
-    if(!findEmptyCell(row, col)) {          //Puzzle is solved
-        return true;             
-    }
-
-    for(int num = 1; num <= 9; num++) {
-        if(isValid(row, col, num)) {        //If num is valid at current cell
-            board[row][col] = num;          //Assign num to current cell
-
-            if(solve()) {                   //Recursively call solve() to solve puzzle
-                return true;
-            }
-
-            board[row][col] = 0;            //If not solved, reset cell and try a diff num
-        }
-    }
-    return false;                           //Backtrack if no num is valid
+void SudokuBoard::setRuntime(double time) {
+    this->runtime = time;
 }
 
+// Function to check if it's safe to place a number in the given position
 bool SudokuBoard::isValid(int row, int col, int num) {
-    for(int i = 0; i < 9; i++) {            //Test if num is in row or col
-        if(board[row][i] == num || board[i][col] == num) {
+    // Check if the number is not already present in the current row, column, and box
+    for (int i = 0; i < N; i++) {
+        if (board[row][i] == num || board[i][col] == num || board[row - row % 3 + i / 3][col - col % 3 + i % 3] == num) {
             return false;
         }
     }
-    
-    int subRow = row - (row % 3);           //Test if num is in the 3x3 sub grid
-    int subCol = col - (col % 3);
-    for(int i = 0; i < 3; i++) {
-        for(int j = 0; j < 3; j++) {
-            if(board[i + subRow][j + subCol] == num) {
-                return false;
-            }
-        }
-    }
-    return true;                            //Return true if num passes all 3 tests
+    return true;
 }
 
+// Function to find an empty cell in the Sudoku grid
 bool SudokuBoard::findEmptyCell(int& row, int& col) {
-    for(row = 0; row < 9; row++) {
-        for(col = 0; col < 9; col++) {
-            if(board[row][col] == 0) {
-                return true;                //Empty cell found at row,col
+    for (row = 0; row < N; row++) {
+        for (col = 0; col < N; col++) {
+            if (board[row][col] == 0) {
+                return true; // Found an empty cell
             }
         }
     }
-    return false;                           //No empty cells found, board solved
+    return false; // No empty cell found
 }
 
-void SudokuBoard::printBoard() {
-    for(const auto& row : board) {           
-        for(int num : row) {                    
-            cout << num << " ";
-        }
-        cout << endl;
+// Recursive function to solve the Sudoku puzzle
+bool SudokuBoard::solve() {
+    int row, col;
+
+    // Check if there's any unassigned position
+    if (!findEmptyCell(row, col)) {
+        return true; // Puzzle solved
     }
+
+    // Try placing numbers from 1 to 9
+    for (int num = 1; num <= 9; num++) {
+        // Check if it's safe to place 'num' in the current position
+        if (isValid(row, col, num)) {
+            // Assign 'num' to the current position
+            board[row][col] = num;
+
+            // Recur to solve the rest of the puzzle
+            if (solve()) {
+                return true;
+            }
+
+            // If assigning 'num' doesn't lead to a solution, backtrack
+            board[row][col] = 0;
+        }
+    }
+
+    // If no number can be placed in the current position, return false
+    return false;
 }
 
+// Function to read the Sudoku board from file
+void SudokuBoard::readBoardFromFile(string filename) {
+    ifstream inputFile(filename);
+    if (!inputFile) {
+        cerr << "Error: Unable to open the file.\n";
+        return;
+    }
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            inputFile >> board[i][j];
+        }
+    }
+    inputFile.close();
+}
+
+// Function to print the Sudoku grid to file
+void SudokuBoard::printBoardToFile(string filename) {
+    ofstream outputFile(filename);
+    if (!outputFile) {
+        cerr << "Error: Unable to create the file.\n";
+        return;
+    }
+
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            outputFile << board[i][j] << " ";
+        }
+        outputFile << endl;
+    }
+    outputFile << "\nRuntime: " << this->runtime << " seconds" << endl;
+
+    outputFile.close();
+}
